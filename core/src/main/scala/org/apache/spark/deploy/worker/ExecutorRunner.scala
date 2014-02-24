@@ -100,10 +100,11 @@ private[spark] class ExecutorRunner(
 
   def getCommandSeq = {
     val user = appDesc.user
+    val ldLibEnv:String = "LD_LIBRARY_PATH=" + command.environment.getOrElse("LD_LIBRARY_PATH", "")
     val sudo = if (System.getProperty("os.name").startsWith("Windows")) 
     	Seq("runas","/profile","/env","/user:" + user) 
       else 
-        Seq("sudo","-E","-u",user)
+        Seq("sudo","-E","-u",user, ldLibEnv)
     
     val command = Command(appDesc.command.mainClass,
       appDesc.command.arguments.map(substituteVariables) ++ Seq(appId), appDesc.command.environment)
