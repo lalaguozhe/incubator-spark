@@ -99,9 +99,15 @@ private[spark] class ExecutorRunner(
   }
 
   def getCommandSeq = {
+    val user = appDesc.user
+    val sudo = if (System.getProperty("os.name").startsWith("Windows")) 
+    	Seq("runas","/profile","/env","/user:" + user) 
+      else 
+        Seq("sudo","-E","-u",user)
+    
     val command = Command(appDesc.command.mainClass,
       appDesc.command.arguments.map(substituteVariables) ++ Seq(appId), appDesc.command.environment)
-    CommandUtils.buildCommandSeq(command, memory, sparkHome.getAbsolutePath)
+    sudo ++ CommandUtils.buildCommandSeq(command, memory, sparkHome.getAbsolutePath)
   }
 
   /**
@@ -113,6 +119,11 @@ private[spark] class ExecutorRunner(
       val executorDir = new File(workDir, appId + "/" + execId)
       if (!executorDir.mkdirs()) {
         throw new IOException("Failed to create directory " + executorDir)
+      }
+      
+      if (System.getProperty("os.name").equalsIgnoreCase("Linux")){
+    	  val appDir = new File(workDir, appId)
+    	  Runtime.getRuntime().exec("sudo chown " + appDesc.user + " -R "+ appDir.getCanonicalPath())
       }
 
       // Launch the process
