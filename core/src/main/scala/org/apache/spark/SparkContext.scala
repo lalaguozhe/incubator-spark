@@ -36,6 +36,7 @@ import org.apache.hadoop.mapred.{FileInputFormat, InputFormat, JobConf, Sequence
   TextInputFormat}
 import org.apache.hadoop.mapreduce.{InputFormat => NewInputFormat, Job => NewHadoopJob}
 import org.apache.hadoop.mapreduce.lib.input.{FileInputFormat => NewFileInputFormat}
+import org.apache.hadoop.security.UserGroupInformation
 import org.apache.mesos.MesosNativeLibrary
 
 import org.apache.spark.deploy.{LocalSparkCluster, SparkHadoopUtil}
@@ -189,7 +190,9 @@ class SparkContext(
 
   // Set SPARK_USER for user who is running SparkContext.
   val sparkUser = Option {
-    Option(System.getProperty("user.name")).getOrElse(System.getenv("SPARK_USER"))
+    Option {
+      Option(UserGroupInformation.getCurrentUser().getShortUserName()).getOrElse(System.getenv("SPARK_USER"))
+    }.getOrElse(System.getProperty("user.name"))
   }.getOrElse {
     SparkContext.SPARK_UNKNOWN_USER
   }
