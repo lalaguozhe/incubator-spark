@@ -945,6 +945,7 @@ class SparkILoop(in0: Option[BufferedReader], protected val out: JPrintWriter,
       .setAppName("Spark shell")
       .setJars(jars)
       .set("spark.repl.class.uri", intp.classServer.uri)
+      .setExecutorEnv("LD_LIBRARY_PATH", System.getenv("LD_LIBRARY_PATH"));
     if (execUri != null) {
       conf.set("spark.executor.uri", execUri)
     }
